@@ -1,0 +1,13 @@
+[package]
+name = "slope"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pyo3 = { version = "0.24.0", features = ["extension-module"] }
+order-stat = "0.1.3"
+statrs = { version = "0.18.0", default-features = false }
+
+[lib]
+name = "slope"
+crate-type = ["cdylib", "lib"]
