@@ -2,7 +2,7 @@
 pub fn mk(xs: &[f64], ys: &[f64]) -> (f64, f64) {
     assert!(xs.len() == ys.len());
     let n = xs.len();
-    let triulen = (n*(n+1))/2;
+    let triulen = n * (n - 1) / 2;
     let mut slopes = Vec::<f64>::with_capacity(triulen);
     let mut s = 0f64;
     for i in 0..n {
