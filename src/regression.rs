@@ -61,10 +61,25 @@ pub fn mk(xs: &[f64], ys: &[f64]) -> (f64, f64) {
     (p, median_slope)
 }
 
+/// calculate the Theil-Sen and Mann-Kendall statistics and intercept
+pub fn mk_intercept(xs: &[f64], ys: &[f64]) -> (f64, f64, f64) {
+    let (p, median_slope) = mk(xs, ys);
+    let mut vs = xs.into_iter().zip(ys.into_iter()).map(|(x, y)| y - x).collect::<Vec<f64>>();
+    let l = vs.len();
+    let median_intercept = if l % 2 == 0 {
+        (*order_stat::kth_by(&mut vs, l / 2 - 1, |u, v| u.partial_cmp(v).unwrap()) +
+        *order_stat::kth_by(&mut vs, l / 2, |u, v| u.partial_cmp(v).unwrap())) / 2.
+    } else {
+        *order_stat::kth_by(&mut vs, l / 2, |u, v| u.partial_cmp(v).unwrap())
+    };
+
+    (p, median_slope, median_intercept)
+}
+
 fn mean(vs: &[f64]) -> f64 { vs.iter().sum::<f64>() / vs.len() as f64 }
 
-/// Calculate the Simple Linear Regression p-value and slope
-pub fn linreg(xs: &[f64], ys: &[f64]) -> (f64, f64) {
+/// Calculate the Simple Linear Regression p-value and slope and intercept
+pub fn linreg_intercept(xs: &[f64], ys: &[f64]) -> (f64, f64, f64) {
     assert!(xs.len() == ys.len());
     let n = xs.len();
     assert!(n >= 2);
@@ -112,6 +127,12 @@ pub fn linreg(xs: &[f64], ys: &[f64]) -> (f64, f64) {
             2. * (1. - tdist.cdf(t.abs()))
         }
     };
+    (p, b, a)
+}
+
+/// Calculate the Simple Linear Regression p-value and slope
+pub fn linreg(xs: &[f64], ys: &[f64]) -> (f64, f64) {
+    let (p, b, _a) = linreg_intercept(xs, ys);
     (p, b)
 }
 
