@@ -64,7 +64,9 @@ pub fn mk(xs: &[f64], ys: &[f64]) -> (f64, f64) {
 /// calculate the Theil-Sen and Mann-Kendall statistics and intercept
 pub fn mk_intercept(xs: &[f64], ys: &[f64]) -> (f64, f64, f64) {
     let (p, median_slope) = mk(xs, ys);
-    let mut vs = xs.into_iter().zip(ys.into_iter()).map(|(x, y)| y - x).collect::<Vec<f64>>();
+    let mut vs = xs.iter().zip(ys.iter())
+        .map(|(x, y)| *y - median_slope * (*x))
+        .collect::<Vec<f64>>();
     let l = vs.len();
     let median_intercept = if l % 2 == 0 {
         (*order_stat::kth_by(&mut vs, l / 2 - 1, |u, v| u.partial_cmp(v).unwrap()) +
@@ -168,12 +170,32 @@ mod tests {
     }
 
     #[test]
+    fn test_linreg_intercept() {
+        assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.], &[0., 2., 4., 6., 8.]), (0.0, 2.0, 0.0));
+        assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.,5.], &[0., 2., 4., 6., 8.,10.]), (0.0, 2.0, 0.0));
+        assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.], &[1., 2., 3., 4., 5.]), (0.0, 1.0, 1.0));
+        assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 1.]), (0.0, 0.0, 1.0));
+        let (p, b, a) = linreg_intercept(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 2.]);
+        assert_eq!((p, b), (0.1816901138162088, 0.2));
+        assert!((a - 0.8).abs() < 1e-12);
+    }
+
+    #[test]
     fn test_mk() {
         assert_eq!(mk(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 1.]), (1.0, 0.0));
         assert_eq!(mk(&[0.,1.,2.,3.,4.], &[1., 2., 3., 4., 5.]), (0.027486336110310372, 1.0));
         assert_eq!(mk(&[0.,1.,2.,3.,4.], &[0., 2., 4., 6., 8.]), (0.027486336110310372, 2.0));
         assert_eq!(mk(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 2.]), (0.288844366370576, 0.0));
         assert_eq!(mk(&[0.,1.,2.,3.,4.,5.], &[0., 2., 4., 6., 8.,10.]), (0.008534920413867608, 2.0));
+    }
+
+    #[test]
+    fn test_mk_intercept() {
+        assert_eq!(mk_intercept(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 1.]), (1.0, 0.0, 1.0));
+        assert_eq!(mk_intercept(&[0.,1.,2.,3.,4.], &[1., 2., 3., 4., 5.]), (0.027486336110310372, 1.0, 1.0));
+        assert_eq!(mk_intercept(&[0.,1.,2.,3.,4.], &[0., 2., 4., 6., 8.]), (0.027486336110310372, 2.0, 0.0));
+        assert_eq!(mk_intercept(&[0.,1.,2.,3.,4.], &[1., 1., 1., 1., 2.]), (0.288844366370576, 0.0, 1.0));
+        assert_eq!(mk_intercept(&[0.,1.,2.,3.,4.,5.], &[0., 2., 4., 6., 8.,10.]), (0.008534920413867608, 2.0, 0.0));
     }
 
     #[test]
