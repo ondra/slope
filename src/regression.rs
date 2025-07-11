@@ -172,6 +172,11 @@ mod tests {
     }
 
     #[test]
+    fn test_linreg_flat() {
+        assert_eq!(linreg(&[0.,1.,2.,3.,4.], &[0.,0.,0.0004,0.,0.]), (0.0, 2.7105054312137612e-21));
+    }
+
+    #[test]
     fn test_linreg_intercept() {
         assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.], &[1.,3.,5.,7.,9.]), (0.0, 2.0, 1.0));
         assert_eq!(linreg_intercept(&[0.,1.,2.,3.,4.], &[1.,1.,1.,1.,1.]), (0.0, 0.0, 1.0));
